@@ -13,7 +13,7 @@ parser.add_argument("model", help="Path to model")
 parser.add_argument("video", help="Camera number of the virtual camera (OBS Reccomended)")
 args = parser.parse_args()
 
-cap = cv2.VideoCapture(args.video)
+cap = cv2.VideoCapture(int(args.video))
 
 
 #Calibration
@@ -55,12 +55,20 @@ while not calibrated:
             with open("calibration.json", "w") as f:
                 json.dump(json_data, f)
                 f.close()
+            with open("calibration.json", "r") as f:
+                calibration = json.load(f)
+                drum_window_x = calibration["drum_window_x"]
+                drum_window_y = calibration["drum_window_y"]
+                drum_window_corner_x = calibration["drum_corner_x"]
+                drum_window_corner_y = calibration["drum_corner_y"]
+                drum_size = calibration["drum_window_size"]
+                f.close()
             calibrated = True
             print("Calibration complete!")
 
-probe_1 = (int(centers[0][0])-drum_size, int(centers[0][1]))
-probe_2 = (int(centers[0][0]), int(centers[0][1]))
-probe_3 = (int(centers[0][0])+drum_size, int(centers[0][1]))
+probe_1 = (drum_window_x-drum_size, drum_window_y)
+probe_2 = (drum_window_x, drum_window_y)
+probe_3 = (drum_window_x+drum_size, drum_window_y)
 while calibrated:
     ret, frame = cap.read()
     probe_1_data = frame[probe_1[0], probe_1[1]]
