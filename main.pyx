@@ -19,8 +19,7 @@ if os.path.exists("calibration.json"):
         drum_window_y = calibration["drum_window_y"]
         drum_window_corner_x = calibration["drum_corner_x"]
         drum_window_corner_y = calibration["drum_corner_y"]
-        drum_window_size_x = calibration["drum_window_size_x"]
-        drum_window_size_y = calibration["drum_window_size_y"]
+        drum_window_size_x = calibration["drum_window_size"]
         f.close()
     calibrated = True
     print("Program is calibrated!")
@@ -35,4 +34,20 @@ while not calibrated:
         corners = result.boxes.xyxy
         centers = result.boxes.xywh
         box_count = len([result.names[cls.item()] for cls in result.boxes.cls.int()]) #Stole this little bit from YOLO docs
-    #Save data to the JSON
+        confs = result.boxes.conf
+    if box_count == 1:
+        #Sometimes false-positive drum window detections are low confidence, so check for those to prevent false positives
+        if confs[0] > 0.65:
+            json_data = {
+                "drum_window_x": int(centers[0][0]),
+                "drum_window_y": int(centers[0][1]),
+                "drum_corner_x": int(corners[0][0]),
+                "drum_corner_y": int(corners[0][1]),
+                "drum_window_size": int(corners[0][3] - corners[0][2]),
+            }
+            with open("calibration.json", "w") as f:
+                json.dump(json_data, f)
+                f.close()
+            calibrated = True
+            print("Calibration complete!")
+
